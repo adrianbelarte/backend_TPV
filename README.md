@@ -40,6 +40,8 @@ Backend para un sistema de Punto de Venta (TPV) enfocado en eventos, fiestas o d
 
 📦 2. Instalar dependencias principales
 npm install express sequelize sqlite3 dotenv jsonwebtoken
+npm install cors
+
 
 🛠️ 3. Instalar dependencias de desarrollo
 npm install --save-dev nodemon sequelize-cli jest supertest

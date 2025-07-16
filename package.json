@@ -4,8 +4,8 @@
   "description": "Backend para un sistema de Punto de Venta (TPV) enfocado en eventos, fiestas o discomóviles. Diseñado para funcionar **offline** mediante una base de datos **SQLite local**, con autenticación por roles, gestión de productos, tickets y reportes de ventas.",
   "main": "index.js",
   "scripts": {
-    "dev": "nodemon src/app.js",
-    "start": "node src/app.js",
+    "dev": "nodemon app.js",
+    "start": "node app.js",
     "test": "jest"
   },
   "repository": {
@@ -20,8 +20,12 @@
   },
   "homepage": "https://github.com/adrianbelarte/backend_TPV#readme",
   "dependencies": {
+    "bcrypt": "^6.0.0",
+    "bcryptjs": "^3.0.2",
+    "cors": "^2.8.5",
     "dotenv": "^17.2.0",
-    "express": "^5.1.0"
+    "express": "^5.1.0",
+    "jsonwebtoken": "^9.0.2"
   },
   "devDependencies": {
     "jest": "^30.0.4",
