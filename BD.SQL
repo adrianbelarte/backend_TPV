@@ -7,8 +7,11 @@ email: Email de acceso
 password: Hasheada con bcrypt
 rol: 'admin' o 'vendedor'
 
-🗃️ 2. Crear modelo Categoria
-npx sequelize-cli model:generate --name Categoria --attributes nombre:string,imagen:string
+📦 Producto
+Producto individual que se puede vender.
+id, nombre, precio, imagen, categoriaId
+Relación muchos a muchos con otros productos como extras 
+(ya lo tienes implementado como ProductoExtra)
 
 
 🛒 3. Crear modelo Producto
@@ -19,8 +22,23 @@ Relación: Un producto pertenece a una categoría
 npx sequelize-cli model:generate --name ProductoExtra --attributes productoId:integer,extraId:integer
 Cada fila significa: "el producto productoId permite añadirse el producto extraId"
 
-🎟️ 5. Crear modelo Ticket
-npx sequelize-cli model:generate --name Ticket --attributes producto:string,cantidad:integer,fecha:date,hora:string,tipo_pago:string,total:float
+🧾 Ticket
+Representa una venta en curso o finalizada, con una lista de productos.
+🔧 Lo que debe tener:
+id, fecha, hora, tipo_pago, total
+Nueva relación: Muchos a muchos con Producto, usando una tabla intermedia: TicketProducto
 
-📊 6. Crear modelo VentaTotal
-npx sequelize-cli model:generate --name VentaTotal --attributes producto:string,cantidad:integer,total_targeta:float,total_efectivo:float,fecha:date,hora:string,total:float
+Tabla intermedia TicketProducto:
+npx sequelize-cli model:generate --name TicketProducto --attributes ticketId:integer,productoId:integer,cantidad:integer
+
+Tendrá:
+ticketId, productoId, cantidad
+
+📊 VentaTotal
+Es como un resumen diario o histórico de todos los productos vendidos agrupados.
+
+Campos:
+producto, cantidad, total_targeta, total_efectivo, total, fecha, hora
+
+Esto parece una tabla agregada (tipo report). 
+No requiere relaciones directas, ya que normalmente se genera a partir de Ticket + TicketProducto.
