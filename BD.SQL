@@ -39,6 +39,8 @@ Es como un resumen diario o histórico de todos los productos vendidos agrupados
 
 Campos:
 producto, cantidad, total_targeta, total_efectivo, total, fecha, hora
+npx sequelize-cli model:generate --name VentaTotal --attributes fecha:date,total_tarjeta:float,total_efectivo:float,total_general:float
+
 
 Esto parece una tabla agregada (tipo report). 
 No requiere relaciones directas, ya que normalmente se genera a partir de Ticket + TicketProducto.

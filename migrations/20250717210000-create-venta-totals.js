@@ -9,34 +9,34 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      producto: {
-        type: Sequelize.STRING
+      fecha: {
+        type: Sequelize.DATEONLY,
+        allowNull: false,
       },
-      cantidad: {
-        type: Sequelize.INTEGER
-      },
-      total_targeta: {
-        type: Sequelize.FLOAT
+      total_tarjeta: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
       },
       total_efectivo: {
-        type: Sequelize.FLOAT
+        type: Sequelize.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
       },
-      fecha: {
-        type: Sequelize.DATE
-      },
-      hora: {
-        type: Sequelize.STRING
-      },
-      total: {
-        type: Sequelize.FLOAT
+      total_general: {
+        type: Sequelize.FLOAT,
+        allowNull: false,
+        defaultValue: 0,
       },
       createdAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       },
       updatedAt: {
         allowNull: false,
-        type: Sequelize.DATE
+        type: Sequelize.DATE,
+        defaultValue: Sequelize.literal('CURRENT_TIMESTAMP')
       }
     });
   },

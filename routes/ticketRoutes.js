@@ -5,8 +5,9 @@ const { authenticateToken, isAdmin } = require('../middlewares/auth');
 
 
 router.get('/', controller.getAll);
-router.post('/', controller.create); // Quizás cualquier user puede crear tickets? Ajusta según necesidad
-router.put('/:id', isAdmin, controller.update);
-router.delete('/:id', isAdmin, controller.delete);
+router.post('/', controller.create); 
+router.get('/tickets/deleted-only', controller.getOnlyDeleted);
+router.put('/:id',authenticateToken , isAdmin, controller.update);
+router.delete('/:id',authenticateToken, isAdmin, controller.delete);
 
 module.exports = router;

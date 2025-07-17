@@ -14,13 +14,10 @@ module.exports = (sequelize, DataTypes) => {
     }
   }
   VentaTotal.init({
-    producto: DataTypes.STRING,
-    cantidad: DataTypes.INTEGER,
-    total_targeta: DataTypes.FLOAT,
-    total_efectivo: DataTypes.FLOAT,
     fecha: DataTypes.DATE,
-    hora: DataTypes.STRING,
-    total: DataTypes.FLOAT
+    total_tarjeta: DataTypes.FLOAT,
+    total_efectivo: DataTypes.FLOAT,
+    total_general: DataTypes.FLOAT
   }, {
     sequelize,
     modelName: 'VentaTotal',

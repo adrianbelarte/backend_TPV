@@ -1,22 +1,35 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
 module.exports = (sequelize, DataTypes) => {
   class TicketProducto extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
     static associate(models) {
-      // define association here
+      // TicketProducto pertenece a un Ticket
+      TicketProducto.belongsTo(models.Ticket, { foreignKey: 'ticketId' });
+      // TicketProducto pertenece a un Producto
+      TicketProducto.belongsTo(models.Producto, { foreignKey: 'productoId' });
     }
   }
   TicketProducto.init({
-    ticketId: DataTypes.INTEGER,
-    productoId: DataTypes.INTEGER,
-    cantidad: DataTypes.INTEGER
+    ticketId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'Tickets', key: 'id' },
+      onDelete: 'CASCADE',
+    },
+    productoId: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      references: { model: 'Productos', key: 'id' },
+      onDelete: 'CASCADE',
+    },
+    cantidad: {
+      type: DataTypes.INTEGER,
+      allowNull: false,
+      defaultValue: 1,
+      validate: {
+        min: 1,
+      }
+    }
   }, {
     sequelize,
     modelName: 'TicketProducto',
