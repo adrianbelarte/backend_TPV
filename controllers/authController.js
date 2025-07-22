@@ -19,7 +19,6 @@ exports.login = async (req, res) => {
       return res.status(401).json({ error: 'Usuario o contraseña incorrectos' });
 
     const payload = { id: user.id, rol: user.rol };
-
     const token = jwt.sign(payload, process.env.JWT_SECRET, { expiresIn: '1h' });
 
     res.json({ token });
