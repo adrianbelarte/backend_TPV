@@ -13,7 +13,16 @@ exports.getAll = async (req, res) => {
 
 exports.create = async (req, res) => {
   try {
-    const { nombre, precio, imagen, categoriaId } = req.body;
+    const { nombre, precio, categoriaId } = req.body;
+    let imagenUrl = null;
+
+    // Si viene archivo, usamos la ruta del archivo subido
+    if (req.file) {
+      imagenUrl = `/uploads/${req.file.filename}`;
+    } else if (req.body.imagen && typeof req.body.imagen === 'string' && req.body.imagen.trim() !== '') {
+      // Si viene imagen por URL, la usamos directamente
+      imagenUrl = req.body.imagen.trim();
+    }
 
     if (!nombre || nombre.trim() === '' || precio === undefined || precio === null) {
       return res.status(400).json({ error: 'Nombre y precio son obligatorios' });
@@ -22,7 +31,7 @@ exports.create = async (req, res) => {
     const nuevoProducto = await Producto.create({
       nombre,
       precio,
-      imagen,
+      imagen: imagenUrl,
       categoriaId
     });
 
@@ -31,6 +40,7 @@ exports.create = async (req, res) => {
     res.status(400).json({ error: error.message || 'Error al crear el producto' });
   }
 };
+
 
 // Crear producto con extras
 exports.createWithExtras = async (req, res) => {
@@ -76,7 +86,16 @@ exports.update = async (req, res) => {
     const producto = await Producto.findByPk(req.params.id);
     if (!producto) return res.status(404).json({ error: 'Producto no encontrado' });
 
-    const { nombre, precio, imagen, categoriaId } = req.body;
+    const { nombre, precio, categoriaId } = req.body;
+    let imagenUrl = null;
+
+    if (req.file) {
+      // Si viene archivo, usamos la ruta del archivo subido
+      imagenUrl = `/uploads/${req.file.filename}`;
+    } else if (req.body.imagen && typeof req.body.imagen === 'string' && req.body.imagen.trim() !== '') {
+      // Si viene imagen por URL, la usamos directamente
+      imagenUrl = req.body.imagen.trim();
+    }
 
     if (nombre !== undefined && (nombre === null || nombre.trim() === '')) {
       return res.status(400).json({ error: 'El nombre no puede estar vacío' });
@@ -89,7 +108,7 @@ exports.update = async (req, res) => {
     const datosUpdate = {};
     if (nombre !== undefined) datosUpdate.nombre = nombre;
     if (precio !== undefined) datosUpdate.precio = precio;
-    if (imagen !== undefined) datosUpdate.imagen = imagen;
+    if (imagenUrl !== null) datosUpdate.imagen = imagenUrl;
     if (categoriaId !== undefined) datosUpdate.categoriaId = categoriaId;
 
     await producto.update(datosUpdate);
