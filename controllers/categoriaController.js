@@ -1,4 +1,4 @@
-const { Categoria } = require('../models');
+const { Categoria, Producto } = require('../models');
 
 exports.getAll = async (req, res) => {
   try {
@@ -8,6 +8,29 @@ exports.getAll = async (req, res) => {
     res.status(500).json({ error: 'Error al obtener las categorías' });
   }
 };
+
+exports.getProductosPorCategoria = async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const categoria = await Categoria.findByPk(id, {
+      include: {
+        model: Producto,
+        as: 'productos',
+      },
+    });
+
+    if (!categoria) {
+      return res.status(404).json({ error: 'Categoría no encontrada' });
+    }
+
+    res.json(categoria.productos);
+  } catch (error) {
+    console.error('Error al obtener productos por categoría:', error);
+    res.status(500).json({ error: 'Error al obtener productos por categoría' });
+  }
+};
+
 
 exports.create = async (req, res) => {
   try {
@@ -25,27 +48,6 @@ exports.create = async (req, res) => {
     res.status(400).json({ error: error.message || 'Error al crear categoría' });
   }
 };
-
-exports.update = async (req, res) => {
-  try {
-    const categoria = await Categoria.findByPk(req.params.id);
-    if (!categoria) return res.status(404).json({ error: 'Categoría no encontrada' });
-
-    const { nombre, descripcion, imagen } = req.body;
-
-    await categoria.update({
-      nombre,
-      descripcion,
-      imagen: imagen?.trim() || null,
-    });
-
-    res.json(categoria);
-  } catch (error) {
-    res.status(400).json({ error: 'Error al actualizar categoría' });
-  }
-};
-
-
 
 exports.update = async (req, res) => {
   try {

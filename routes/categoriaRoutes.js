@@ -8,6 +8,7 @@ const upload = require('../utils/upload');
 
 // Rutas públicas
 router.get('/', controller.getAll);
+router.get('/:id/productos', controller.getProductosPorCategoria);
 
 // Rutas protegidas (requieren token de admin)
 router.post('/', authenticateToken, isAdmin,upload.single('imagen'), controller.create);

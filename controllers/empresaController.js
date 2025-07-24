@@ -3,12 +3,15 @@ const { Empresa } = require('../models');
 exports.get = async (req, res) => {
   try {
     const empresa = await Empresa.findOne();
-    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    if (!empresa) {
+      return res.json({}); // Devuelve un objeto vacío con status 200
+    }
     res.json(empresa);
   } catch (error) {
     res.status(500).json({ error: 'Error al obtener datos de empresa' });
   }
 };
+
 
 exports.create = async (req, res) => {
   try {
