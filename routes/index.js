@@ -3,6 +3,7 @@ const express = require('express');
 const router = express.Router();
 const ventaTotalController = require('../controllers/ventaTotalController')
 
+router.use('/auth', require('./authRoutes'));
 router.use('/users', require('./userRoutes'));
 router.use('/categorias', require('./categoriaRoutes'));
 router.use('/productos', require('./productoRoutes'));
