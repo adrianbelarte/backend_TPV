@@ -1,48 +1,33 @@
-// server.js (o imprime.js)
+import escpos from 'escpos';
 
-const express = require('express');
-const escpos = require('escpos');
-escpos.USB = require('escpos-usb');
-
-const app = express();
-app.use(express.json());
-
-const device = new escpos.USB();
-const printer = new escpos.Printer(device);
-
-app.post('/imprimir-ticket', (req, res) => {
-  const { ticket, tipoPago } = req.body;
+export function imprimir(ticket, tipoPago) {
+  const device = new escpos.USB();
+  const printer = new escpos.Printer(device);
 
   device.open(() => {
     printer
-      .encode('UTF-8')
-      .text('TPV Hostelería')
-      .text('---------------------')
-      .text(`Ticket: ${ticket.id}`)
-      .text(`Fecha: ${new Date(ticket.fecha).toLocaleString()}`)
-      .text('---------------------');
+      .align('ct')
+      .image('../assets/1000132003.jpg', 's8') 
+      .then(() => {
+        printer
+          .text(ticket.fecha)
+          .text(ticket.empresa)
+          .drawLine()
+          .align('lt');
 
-    ticket.productos.forEach(p => {
-      printer.text(`${p.nombre} x ${p.cantidad} = ${p.precio.toFixed(2)}€`);
-    });
+        ticket.productos.forEach(p => {
+          printer.text(`x ${p.nombre}`);
+        });
 
-    printer
-      .text('---------------------')
-      .text(`TOTAL: ${ticket.total.toFixed(2)} €`)
-      .text(`Pago: ${ticket.tipo_pago}`)
-      .text('Gracias por su compra')
-      .cut();
-
-    if (tipoPago === 'efectivo') {
-      printer.cashdraw(); // abre el cajón
-    }
-
-    printer.close();
-    res.json({ status: 'ok', message: 'Ticket impreso y cajón abierto' });
+        printer
+          .drawLine()
+          .align('rt')
+          .text(`TOTAL: ${ticket.total.toFixed(2)} €`)
+          .align('ct')
+          .text('Gracias por confiar en Grupo Manhattan')
+          .text('Valencia')
+          .cut()
+          .close();
+      });
   });
-});
-
-const PORT = 3001;
-app.listen(PORT, () => {
-  console.log(`Servidor de impresión escuchando en puerto ${PORT}`);
-});
+}
