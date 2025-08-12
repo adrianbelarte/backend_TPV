@@ -12,5 +12,6 @@ router.use('/empresa', require('./empresaRoutes'));
 router.post('/cerrar-caja', cerrarCajaController.cerrarCaja);
 router.use('/tickets', require('./ticketRoutes'));
 router.use('/auth', require('./authRoutes'));
+router.use('/imprimir', require('./imprimirRoutes'));
 
 module.exports = router;

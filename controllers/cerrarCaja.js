@@ -4,24 +4,13 @@ const ExcelJS = require('exceljs');
 const fs = require('fs');
 const path = require('path');
 
+// ...
 exports.cerrarCaja = async (req, res) => {
   try {
-    // Obtener la fecha del último cierre
-    const ultimoCierre = await VentaTotal.findOne({
-      order: [['fecha', 'DESC']]
-    });
-
-    // Fecha desde donde recoger tickets (si no hay último cierre, desde inicio)
-    const desdeFecha = ultimoCierre ? ultimoCierre.fecha : new Date(0);
     const hastaFecha = new Date();
 
+    // Buscar TODOS los tickets abiertos (independientemente de la fecha)
     const tickets = await Ticket.findAll({
-      where: {
-        fecha: {
-          [Op.gt]: desdeFecha,
-          [Op.lte]: hastaFecha,
-        }
-      },
       include: [{
         model: Producto,
         as: 'productos',
@@ -29,11 +18,7 @@ exports.cerrarCaja = async (req, res) => {
       }]
     });
 
-    if (tickets.length === 0) {
-      return res.status(400).json({ error: 'No hay tickets para cerrar desde el último cierre.' });
-    }
-
-    // Acumular totales por tipo de pago
+    // Acumular totales
     let total_tarjeta = 0;
     let total_efectivo = 0;
 
@@ -44,7 +29,7 @@ exports.cerrarCaja = async (req, res) => {
 
     const total_general = total_tarjeta + total_efectivo;
 
-    // Guardar resumen del cierre con la fecha y hora actual
+    // Guardar resumen
     const ventaTotal = await VentaTotal.create({
       fecha: hastaFecha,
       total_tarjeta,
@@ -52,7 +37,7 @@ exports.cerrarCaja = async (req, res) => {
       total_general
     });
 
-    // Crear Excel con tickets cerrados
+    // Crear Excel aunque no haya tickets
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Tickets cerrados');
 
@@ -89,9 +74,8 @@ exports.cerrarCaja = async (req, res) => {
 
     await workbook.xlsx.writeFile(fullPath);
 
-    // Acumular productos vendidos y sus cantidades
+    // Acumular productos vendidos
     const productosVendidos = {};
-
     tickets.forEach(ticket => {
       ticket.productos.forEach(producto => {
         const cantidad = producto.TicketProducto ? producto.TicketProducto.cantidad : 1;
@@ -102,18 +86,16 @@ exports.cerrarCaja = async (req, res) => {
       });
     });
 
-    // Convertir objeto a array [{nombre, cantidad}, ...]
     const productosArray = Object.entries(productosVendidos).map(([nombre, cantidad]) => ({
       nombre,
       cantidad
     }));
 
-    // Borrar tickets y sus relaciones ya cerrados
+    // Borrar tickets y sus relaciones
     const ticketIds = tickets.map(t => t.id);
     await TicketProducto.destroy({ where: { ticketId: ticketIds } });
     await Ticket.destroy({ where: { id: ticketIds } });
 
-    // Responder con el resumen y los productos vendidos
     res.json({
       mensaje: 'Caja cerrada correctamente, tickets exportados y base limpia',
       archivo: `/exports/${fileName}`,
@@ -126,3 +108,4 @@ exports.cerrarCaja = async (req, res) => {
     res.status(500).json({ error: 'Error al cerrar caja', details: error.message });
   }
 };
+

@@ -26,10 +26,12 @@
     "date-fns": "^4.1.0",
     "dotenv": "^17.2.0",
     "escpos": "^3.0.0-alpha.6",
+    "escpos-usb": "^3.0.0-alpha.4",
     "exceljs": "^4.4.0",
     "express": "^5.1.0",
     "jsonwebtoken": "^9.0.2",
     "multer": "^2.0.2",
+    "node-thermal-printer": "^4.5.0",
     "sequelize": "^6.37.7"
   },
   "devDependencies": {
