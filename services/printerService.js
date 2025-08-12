@@ -1,10 +1,8 @@
-const ThermalPrinter = require("node-thermal-printer").printer;
-const PrinterTypes = require("node-thermal-printer").types;
-
 async function imprimirTicket(ticket) {
+  // Puedes usar ticket.tipo_pago aquí si quieres imprimirlo
   let printer = new ThermalPrinter({
-    type: PrinterTypes.EPSON, // Cambia si tu impresora es STAR
-    interface: "usb",         // O "tcp://IP" o "bluetooth"
+    type: PrinterTypes.EPSON,
+    interface: "usb",
   });
 
   printer.alignCenter();
@@ -19,6 +17,9 @@ async function imprimirTicket(ticket) {
 
   printer.drawLine();
   printer.println(`TOTAL: ${ticket.total} €`);
+  if(ticket.tipo_pago) {
+    printer.println(`Pago con: ${ticket.tipo_pago.toUpperCase()}`);
+  }
   printer.newLine();
   printer.println("Gracias por confiar en");
   printer.println("Grupo Manhattan");
@@ -26,5 +27,3 @@ async function imprimirTicket(ticket) {
 
   await printer.execute();
 }
-
-module.exports = { imprimirTicket };
