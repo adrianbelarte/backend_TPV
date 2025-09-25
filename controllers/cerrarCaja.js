@@ -4,12 +4,28 @@ const ExcelJS = require('exceljs');
 const fs = require('fs');
 const path = require('path');
 
-// ...
+function toSafeDate(value, fallback = null) {
+  if (!value) return fallback;
+  const d = new Date(value);
+  return isNaN(d) ? fallback : d;
+}
+
+function toIsoDateOnly(d) {
+  return d ? d.toISOString().split('T')[0] : '';
+}
+
+function toHHMM(d) {
+  if (!d) return '';
+  const hh = String(d.getHours()).padStart(2, '0');
+  const mm = String(d.getMinutes()).padStart(2, '0');
+  return `${hh}:${mm}`;
+}
+
 exports.cerrarCaja = async (req, res) => {
   try {
     const hastaFecha = new Date();
 
-    // Buscar TODOS los tickets abiertos (independientemente de la fecha)
+    // Trae todos los tickets abiertos con sus productos
     const tickets = await Ticket.findAll({
       include: [{
         model: Producto,
@@ -18,94 +34,104 @@ exports.cerrarCaja = async (req, res) => {
       }]
     });
 
-    // Acumular totales
+    // Totales
     let total_tarjeta = 0;
     let total_efectivo = 0;
 
-    tickets.forEach(ticket => {
-      if (ticket.tipo_pago === 'tarjeta') total_tarjeta += ticket.total;
-      else if (ticket.tipo_pago === 'efectivo') total_efectivo += ticket.total;
-    });
+    for (const ticket of tickets) {
+      if (ticket.tipo_pago === 'tarjeta') total_tarjeta += Number(ticket.total) || 0;
+      else if (ticket.tipo_pago === 'efectivo') total_efectivo += Number(ticket.total) || 0;
+    }
 
     const total_general = total_tarjeta + total_efectivo;
 
-    // Guardar resumen
+    // Guarda resumen (usa Date nativa; Sequelize DATE la acepta)
     const ventaTotal = await VentaTotal.create({
       fecha: hastaFecha,
       total_tarjeta,
       total_efectivo,
-      total_general
+      total_general,
     });
 
-    // Crear Excel aunque no haya tickets
+    // Excel
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Tickets cerrados');
 
     sheet.columns = [
-      { header: 'ID Ticket', key: 'id', width: 10 },
-      { header: 'Fecha', key: 'fecha', width: 15 },
-      { header: 'Hora', key: 'hora', width: 10 },
-      { header: 'Tipo de Pago', key: 'tipo_pago', width: 15 },
-      { header: 'Total', key: 'total', width: 10 },
-      { header: 'Productos', key: 'productos', width: 50 },
+      { header: 'ID Ticket',    key: 'id',         width: 10 },
+      { header: 'Fecha',        key: 'fecha',      width: 15 },
+      { header: 'Hora',         key: 'hora',       width: 10 },
+      { header: 'Tipo de Pago', key: 'tipo_pago',  width: 15 },
+      { header: 'Total',        key: 'total',      width: 12 },
+      { header: 'Productos',    key: 'productos',  width: 50 },
     ];
 
-    tickets.forEach(ticket => {
-      const productosStr = ticket.productos.map(p => {
+    for (const ticket of tickets) {
+      // Fecha segura: ticket.fecha -> createdAt -> hastaFecha
+      const baseDate =
+        toSafeDate(ticket.fecha) ||
+        toSafeDate(ticket.createdAt) ||
+        hastaFecha;
+
+      const fechaStr = toIsoDateOnly(baseDate);
+      const horaStr  = ticket.hora || toHHMM(baseDate);
+
+      const productosStr = (ticket.productos || []).map(p => {
         const cantidad = p.TicketProducto ? p.TicketProducto.cantidad : 1;
         return `${p.nombre} (${cantidad})`;
       }).join(', ');
 
       sheet.addRow({
         id: ticket.id,
-        fecha: ticket.fecha.toISOString().split('T')[0],
-        hora: ticket.hora,
-        tipo_pago: ticket.tipo_pago,
-        total: ticket.total,
+        fecha: fechaStr,
+        hora: horaStr,
+        tipo_pago: ticket.tipo_pago || '',
+        total: Number(ticket.total) || 0,
         productos: productosStr,
       });
-    });
+    }
 
+    // Carpeta de exportación
     const exportPath = path.join(__dirname, '..', 'exports');
-    if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath);
+    if (!fs.existsSync(exportPath)) fs.mkdirSync(exportPath, { recursive: true });
 
-    const fileName = `Tickets_${hastaFecha.toISOString().split('T')[0]}_${hastaFecha.getHours()}-${hastaFecha.getMinutes()}.xlsx`;
+    const fechaNombre = toIsoDateOnly(hastaFecha);
+    const fileName = `Tickets_${fechaNombre}_${String(hastaFecha.getHours()).padStart(2,'0')}-${String(hastaFecha.getMinutes()).padStart(2,'0')}.xlsx`;
     const fullPath = path.join(exportPath, fileName);
 
     await workbook.xlsx.writeFile(fullPath);
 
     // Acumular productos vendidos
     const productosVendidos = {};
-    tickets.forEach(ticket => {
-      ticket.productos.forEach(producto => {
+    for (const ticket of tickets) {
+      for (const producto of (ticket.productos || [])) {
         const cantidad = producto.TicketProducto ? producto.TicketProducto.cantidad : 1;
-        if (!productosVendidos[producto.nombre]) {
-          productosVendidos[producto.nombre] = 0;
-        }
-        productosVendidos[producto.nombre] += cantidad;
-      });
-    });
+        productosVendidos[producto.nombre] = (productosVendidos[producto.nombre] || 0) + (Number(cantidad) || 0);
+      }
+    }
 
     const productosArray = Object.entries(productosVendidos).map(([nombre, cantidad]) => ({
       nombre,
       cantidad
     }));
 
-    // Borrar tickets y sus relaciones
-    const ticketIds = tickets.map(t => t.id);
-    await TicketProducto.destroy({ where: { ticketId: ticketIds } });
-    await Ticket.destroy({ where: { id: ticketIds } });
+    // Borrar tickets y relaciones si hay algo
+    const ticketIds = tickets.map(t => t.id).filter(Boolean);
+
+    if (ticketIds.length > 0) {
+      await TicketProducto.destroy({ where: { ticketId: { [Op.in]: ticketIds } } });
+      await Ticket.destroy({ where: { id: { [Op.in]: ticketIds } } });
+    }
 
     res.json({
       mensaje: 'Caja cerrada correctamente, tickets exportados y base limpia',
       archivo: `/exports/${fileName}`,
-      resumen: ventaTotal,
+      resumen: ventaTotal,   // objeto Sequelize; si prefieres JSON plano usa ventaTotal.toJSON()
       productos: productosArray
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('❌ Error en /api/cerrar-caja:', error);
     res.status(500).json({ error: 'Error al cerrar caja', details: error.message });
   }
 };
-

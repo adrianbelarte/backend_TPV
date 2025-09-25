@@ -14,6 +14,12 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 app.use(express.urlencoded({ extended: true }));
 app.use('/exports', express.static('exports'));
 
+// Rutas de impresión
+const imprimirRouter = require('./routes/imprimir'); 
+const imprimirCierreRouter = require('./routes/imprimirCierre'); 
+app.use('/api/imprimir', imprimirRouter);
+app.use('/api/imprimir-cierre', imprimirCierreRouter);
+
 // Rutas
 app.use('/api', routes);
 
