@@ -1,53 +1,47 @@
-const { Empresa } = require('../models');
+// controllers/empresaController.js
+const { Empresa } = require("../models");
 
-exports.get = async (req, res) => {
-  try {
-    const empresa = await Empresa.findOne();
-    if (!empresa) {
-      return res.json({}); // Devuelve un objeto vacío con status 200
-    }
-    res.json(empresa);
-  } catch (error) {
-    res.status(500).json({ error: 'Error al obtener datos de empresa' });
-  }
+exports.get = async (_req, res) => {
+  const empresa = await Empresa.findOne();
+  res.json(empresa || null);
 };
-
 
 exports.create = async (req, res) => {
   try {
-    const existente = await Empresa.findOne();
-    if (existente) {
-      return res.status(400).json({ error: 'Ya existe una empresa registrada' });
-    }
+    const { nombre, direccion, telefono, correo, cif, logo } = req.body;
+    let logoUrl = null;
 
-    const empresa = await Empresa.create(req.body);
+    if (req.file) logoUrl = `/uploads/${req.file.filename}`;
+    else if (logo && typeof logo === "string" && logo.trim()) logoUrl = logo.trim();
+
+    const empresa = await Empresa.create({
+      nombre,
+      direccion,
+      telefono,
+      correo,
+      cif,
+      logo: logoUrl,
+    });
     res.status(201).json(empresa);
-  } catch (error) {
-    res.status(400).json({ error: 'Error al crear la empresa' });
+  } catch (e) {
+    res.status(400).json({ error: e.message || "Error al crear empresa" });
   }
 };
-
 
 exports.update = async (req, res) => {
   try {
     const empresa = await Empresa.findOne();
-    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
+    if (!empresa) return res.status(404).json({ error: "No existe empresa" });
 
-    await empresa.update(req.body);
+    const { nombre, direccion, telefono, correo, cif, logo } = req.body;
+    let logoUrl = empresa.logo;
+
+    if (req.file) logoUrl = `/uploads/${req.file.filename}`;
+    else if (logo && typeof logo === "string") logoUrl = logo.trim() || null;
+
+    await empresa.update({ nombre, direccion, telefono, correo, cif, logo: logoUrl });
     res.json(empresa);
-  } catch (error) {
-    res.status(400).json({ error: 'Error al actualizar empresa' });
-  }
-};
-
-exports.delete = async (req, res) => {
-  try {
-    const empresa = await Empresa.findOne();
-    if (!empresa) return res.status(404).json({ error: 'Empresa no encontrada' });
-
-    await empresa.destroy();
-    res.status(204).send();
-  } catch (error) {
-    res.status(400).json({ error: 'Error al eliminar empresa' });
+  } catch (e) {
+    res.status(400).json({ error: e.message || "Error al actualizar empresa" });
   }
 };

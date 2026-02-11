@@ -8,7 +8,7 @@ module.exports = {
     storage: ":memory:",
   },
   production: {
-    dialect: "sqlite",
-    storage: process.env.SQLITE_STORAGE_PATH || "/tmp/database.sqlite",
-  }
+  dialect: "sqlite",
+  storage: process.env.SQLITE_STORAGE_PATH || "/tmp/database.sqlite",
+}
 };

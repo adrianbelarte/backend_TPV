@@ -1,9 +1,10 @@
-const { Producto, Categoria, ProductoExtra } = require('../models');
+const { Producto, Categoria } = require('../models');
 
+// 🔹 Obtener todos los productos (con su categoría asociada)
 exports.getAll = async (req, res) => {
   try {
     const productos = await Producto.findAll({
-      include: ['categoria', 'extras']
+      include: ['categoria'] // 👈 solo categoría, sin extras
     });
     res.json(productos);
   } catch (error) {
@@ -11,16 +12,15 @@ exports.getAll = async (req, res) => {
   }
 };
 
+// 🔹 Crear producto
 exports.create = async (req, res) => {
   try {
     const { nombre, precio, categoriaId } = req.body;
     let imagenUrl = null;
 
-    // Si viene archivo, usamos la ruta del archivo subido
     if (req.file) {
       imagenUrl = `/uploads/${req.file.filename}`;
     } else if (req.body.imagen && typeof req.body.imagen === 'string' && req.body.imagen.trim() !== '') {
-      // Si viene imagen por URL, la usamos directamente
       imagenUrl = req.body.imagen.trim();
     }
 
@@ -35,52 +35,16 @@ exports.create = async (req, res) => {
       categoriaId
     });
 
-    res.status(201).json({ mensaje: '✅ Producto creado correctamente', producto: nuevoProducto });
+    res.status(201).json({
+      mensaje: '✅ Producto creado correctamente',
+      producto: nuevoProducto
+    });
   } catch (error) {
     res.status(400).json({ error: error.message || 'Error al crear el producto' });
   }
 };
 
-
-// Crear producto con extras
-exports.createWithExtras = async (req, res) => {
-  try {
-    const { nombre, precio, imagen, categoriaId, extras } = req.body;
-
-    if (!nombre || !precio) {
-      return res.status(400).json({ error: 'Nombre y precio son obligatorios' });
-    }
-
-    // Crear el producto primero
-    const nuevoProducto = await Producto.create({ nombre, precio, imagen, categoriaId });
-
-    // Validar que extras sean un array y que cada extra exista en la BD
-    if (Array.isArray(extras) && extras.length > 0) {
-      // Buscar todos los extras con esos IDs
-      const extrasExistentes = await Producto.findAll({
-        where: { id: extras }
-      });
-
-      if (extrasExistentes.length !== extras.length) {
-        return res.status(400).json({ error: 'Algunos extras no existen' });
-      }
-
-      // Si todos existen, agregarlos
-      await nuevoProducto.addExtras(extras);
-    }
-
-    const productoConExtras = await Producto.findByPk(nuevoProducto.id, {
-      include: ['extras', 'categoria']
-    });
-
-    res.status(201).json({ mensaje: 'Producto con extras creado correctamente', producto: productoConExtras });
-  } catch (error) {
-    res.status(400).json({ error: error.message || 'Error al crear producto con extras' });
-  }
-};
-
-
-
+// 🔹 Actualizar producto
 exports.update = async (req, res) => {
   try {
     const producto = await Producto.findByPk(req.params.id);
@@ -90,21 +54,19 @@ exports.update = async (req, res) => {
     let imagenUrl = null;
 
     if (req.file) {
-      // Si viene archivo, usamos la ruta del archivo subido
       imagenUrl = `/uploads/${req.file.filename}`;
     } else if (req.body.imagen && typeof req.body.imagen === 'string' && req.body.imagen.trim() !== '') {
-      // Si viene imagen por URL, la usamos directamente
       imagenUrl = req.body.imagen.trim();
     }
 
     if (nombre !== undefined && (nombre === null || nombre.trim() === '')) {
       return res.status(400).json({ error: 'El nombre no puede estar vacío' });
     }
+
     if (precio !== undefined && (precio === null || isNaN(precio))) {
       return res.status(400).json({ error: 'El precio debe ser un número válido' });
     }
 
-    // Construimos un objeto con solo propiedades definidas
     const datosUpdate = {};
     if (nombre !== undefined) datosUpdate.nombre = nombre;
     if (precio !== undefined) datosUpdate.precio = precio;
@@ -118,7 +80,7 @@ exports.update = async (req, res) => {
   }
 };
 
-
+// 🔹 Eliminar producto
 exports.delete = async (req, res) => {
   try {
     const producto = await Producto.findByPk(req.params.id);

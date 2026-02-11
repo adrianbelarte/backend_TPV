@@ -5,22 +5,15 @@ module.exports = (sequelize, DataTypes) => {
       type: DataTypes.STRING,
       allowNull: false,
       validate: {
-        notEmpty: {
-          msg: 'El nombre es obligatorio'
-        }
+        notEmpty: { msg: 'El nombre es obligatorio' }
       }
     },
     precio: {
       type: DataTypes.FLOAT,
       allowNull: false,
       validate: {
-        isFloat: {
-          msg: 'El precio debe ser un número'
-        },
-        min: {
-          args: [0],
-          msg: 'El precio debe ser mayor o igual a 0'
-        }
+        isFloat: { msg: 'El precio debe ser un número' },
+        min: { args: [0], msg: 'El precio debe ser mayor o igual a 0' }
       }
     },
     imagen: {
@@ -34,25 +27,17 @@ module.exports = (sequelize, DataTypes) => {
   }, {});
 
   Producto.associate = function(models) {
+    // Categoria
     Producto.belongsTo(models.Categoria, {
       foreignKey: 'categoriaId',
       as: 'categoria',
     });
 
-    Producto.belongsToMany(models.Producto, {
-      through: models.ProductoExtra,
-      as: 'extras',
-      foreignKey: 'productoId',
-      otherKey: 'extraId',
-    });
+    // ❌ Eliminadas asociaciones de extras:
+    // Producto.belongsToMany(models.Producto, { through: models.ProductoExtra, as: 'extras', ... })
+    // Producto.belongsToMany(models.Producto, { through: models.ProductoExtra, as: 'baseDe', ... })
 
-    Producto.belongsToMany(models.Producto, {
-      through: models.ProductoExtra,
-      as: 'baseDe',
-      foreignKey: 'extraId',
-      otherKey: 'productoId',
-    });
-
+    // Tickets (si ya lo usas, lo mantenemos)
     Producto.belongsToMany(models.Ticket, {
       through: models.TicketProducto,
       foreignKey: 'productoId',

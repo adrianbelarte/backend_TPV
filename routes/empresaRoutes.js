@@ -1,12 +1,11 @@
-// routes/empresaRoutes.js
-const express = require('express');
-const router = express.Router();
-const controller = require('../controllers/empresaController');
-const { authenticateToken, isAdmin } = require('../middlewares/auth');
+// routes/empresa.js
+const router = require("express").Router();
+const c = require("../controllers/empresaController");
+const upload = require("../utils/upload");
+// const { authenticateToken, isAdmin } = require("../middlewares/auth"); // si lo usas
 
-router.get('/', controller.get);
-router.post('/', authenticateToken, isAdmin, controller.create);
-router.put('/', authenticateToken, isAdmin, controller.update);
-router.delete('/', authenticateToken, isAdmin, controller.delete);
+router.get("/", c.get);
+router.post("/", /*authenticateToken, isAdmin,*/ upload.single("logo"), c.create);
+router.put("/",  /*authenticateToken, isAdmin,*/ upload.single("logo"), c.update);
 
 module.exports = router;
