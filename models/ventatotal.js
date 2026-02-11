@@ -1,26 +1,26 @@
 'use strict';
-const {
-  Model
-} = require('sequelize');
+const { Model } = require('sequelize');
+
 module.exports = (sequelize, DataTypes) => {
   class VentaTotal extends Model {
-    /**
-     * Helper method for defining associations.
-     * This method is not a part of Sequelize lifecycle.
-     * The `models/index` file will call this method automatically.
-     */
-    static associate(models) {
-      // define association here
-    }
+    static associate(models) {}
   }
+
   VentaTotal.init({
-    fecha: DataTypes.DATE,
+    fecha: DataTypes.DATEONLY,      // ✅ alinear con migración
     total_tarjeta: DataTypes.FLOAT,
     total_efectivo: DataTypes.FLOAT,
-    total_general: DataTypes.FLOAT
+    total_general: DataTypes.FLOAT,
+
+    // ✅ nuevos campos
+    productos_json: DataTypes.TEXT,
+    export_xlsx: DataTypes.TEXT,
+    printed_at: DataTypes.DATE,
+    reprinted_count: DataTypes.INTEGER,
   }, {
     sequelize,
     modelName: 'VentaTotal',
   });
+
   return VentaTotal;
 };

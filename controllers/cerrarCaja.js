@@ -45,14 +45,6 @@ exports.cerrarCaja = async (req, res) => {
 
     const total_general = total_tarjeta + total_efectivo;
 
-    // Guarda resumen (usa Date nativa; Sequelize DATE la acepta)
-    const ventaTotal = await VentaTotal.create({
-      fecha: hastaFecha,
-      total_tarjeta,
-      total_efectivo,
-      total_general,
-    });
-
     // Excel
     const workbook = new ExcelJS.Workbook();
     const sheet = workbook.addWorksheet('Tickets cerrados');
@@ -114,6 +106,17 @@ exports.cerrarCaja = async (req, res) => {
       nombre,
       cantidad
     }));
+
+        const ventaTotal = await VentaTotal.create({
+  fecha: hastaFecha,
+  total_tarjeta,
+  total_efectivo,
+  total_general,
+  productos_json: JSON.stringify(productosArray),
+  export_xlsx: `/exports/${fileName}`
+});
+
+
 
     // Borrar tickets y relaciones si hay algo
     const ticketIds = tickets.map(t => t.id).filter(Boolean);
